@@ -3,7 +3,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
 
-from v3 import *
+from downloader import *
 
 
 # messagebox.askyesno("Account checker","Errore!\n"+str(err)+" combos non sono state scritte correttamente!\nVolete modificarle?")):
