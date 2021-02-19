@@ -1,6 +1,4 @@
-import time
 from selenium.webdriver import Edge
-import requests
 import re
 
 
@@ -21,6 +19,12 @@ class M3U8:
         page=re.findall(
             'https://hdpass.click/movie/(.*)\?noads=1', root.page_source)[0]
         root.get("https://hdpass.click/movie/%s?resolution=2&noads=1"%page)
+        url4K=re.findall(
+            'https://hdmario.live/embed/(.*)/?&amp;noads=1', root.page_source)[0]
+        root.get("https://hdmario.live/embed/%s?&noads=1"%url4K)
+        print(root.get_log("browser"))
+        #k4=root.find_element_by_xpath("/html/body/div/div[1]/div[1]/div[2]/div[12]/div[1]/div/div/div[2]/div")
+        #k4.submit()
 
 
 # elem = driver.find_element_by_xpath("/html/body/div[1]/div/div[3]/div/div/div[1]/form/div[1]/div[1]/div/label/input")
