@@ -10,9 +10,8 @@ class M3U8:
 
     def get(self):
         capabilities = DesiredCapabilities.CHROME
-# capabilities["loggingPrefs"] = {"performance": "ALL"}  # chromedriver < ~75
         capabilities["goog:loggingPrefs"] = {
-            "browser": "ALL"}  # chromedriver 75+
+            "browser": "ALL"}
         root = Chrome(
             executable_path="C:\\Users\\marti\\Downloads\\chromedriver_win32\\chromedriver.exe", desired_capabilities=capabilities)
         root.get(self.url)
@@ -41,8 +40,6 @@ class M3U8:
                     root.get("blob:%s" % blob[0])
                     print(root.page_source)
                     return
-                
-
 
 
 M3U8("https://altadefinizionecommunity.net/flora-ulisse-streaming/?loggedin=eyJlIjoiZ2djYXJsbzYzMkBnbWFpbC5jb20iLCJwIjoic29ub2RpMDAifQ==").get()
