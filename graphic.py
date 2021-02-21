@@ -74,7 +74,7 @@ class Graphic:
         self.m3u8_file = filedialog.askopenfilename(
             parent=self.window, filetypes=[('File m3u8', '*.m3u8')])
         self.m3u8_bool=True
-        self.check()
+        self.start_button.config(state='active')
 
     def save(self):
         self.output_file = filedialog.asksaveasfilename(
@@ -85,7 +85,7 @@ class Graphic:
         except:
             self.output_file += ".mp4"
         self.output_bool=True
-        self.check()
+        self.start_button.config(state='active')
     
     def resume(self):
         temp=filedialog.askdirectory(parent=self.window)
@@ -94,17 +94,13 @@ class Graphic:
         self.output_file=data[1]
         self.m3u8_bool=True
         self.output_bool=True
-        self.check()
+        self.start_button.config(state='active')
 
     def start(self):
         Downloader(self, self.m3u8_file, self.output_file)
     
     def error(self, title, message):
         messagebox.showerror(title,message)
-
-    def check(self):
-        if(self.m3u8_bool and self.output_bool):
-            self.start_button.config(state='active')
 
 if __name__ == "__main__":
     Graphic()
