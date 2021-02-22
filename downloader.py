@@ -1,3 +1,4 @@
+from data import Data
 import os
 import re
 import requests
@@ -16,22 +17,26 @@ class Downloader:
             temp += chunk
         return temp
 
-    def __init__(self, graphic_self, m3u8Path, path, progress=0):
+    def __init__(self, graphic_self, dat: Data, path, progress=0):
+        if path[-4:] != ".mp4":
+            path += '.mp4'
 
         tempPath = tempFolder(path)
-
-        if os.path.exists(tempPath):
-            os.mkdir(tempPath)
-
         os.chdir(tempPath)
 
-        data = open(m3u8Path, 'r').read()
+        try:
+            progress = int(re.findall("file '.*_(.*).mp4",
+                                      open('temp.txt', 'r').readlines()[-1])[0])+1
+        except:
+            open("temp.txt", "w").write('')
+
+        data = open(".m3u8", 'r').read()
 
         key_url = re.findall(
             '#EXT-X-KEY:METHOD=AES-128,URI="(.*)"', data)
         key = self.getFile(key_url[0])
 
-        dec = Decrypt(data)
+        dec = Decrypt(key)
 
         film_urls = re.findall(
             '#EXTINF:.*,\s(.*)', data)
@@ -42,9 +47,9 @@ class Downloader:
             for i in range(progress, l):
                 file_name = 'tmp_%d.mp4' % i
                 print('Processing %d of %d' % (i+1, l))
-
+                
                 open(file_name, 'wb').write(
-                    Decrypt.get(self.getFile(film_urls[i])))
+                    dec.get(self.getFile(film_urls[i])))
 
                 open('temp.txt', 'a').write("file '%s'\n" % file_name)
 
@@ -54,9 +59,9 @@ class Downloader:
 
         else:
             os.system("ffmpeg -f concat -i temp.txt -c copy output.mp4")
-            shutil.move("output.mp4", path)
+            os.chdir(tempPath.split('\\')[:-1])
+            shutil.move("%s\\output.mp4" % tempPath, path)
             if os.path.exists(path):
-                os.chdir(tempPath.split('\\')[:-1])
                 shutil.rmtree(tempPath)
             else:
                 graphic_self.error(

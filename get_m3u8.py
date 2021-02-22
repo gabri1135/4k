@@ -1,3 +1,4 @@
+from utils import initialize
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium import webdriver
 import time
@@ -8,13 +9,15 @@ import os
 class M3U8:
 
     def get(self, url):
-        self.path=os.getcwd()
+        self.path = os.getcwd()
 
         self.setProp()
 
         self.root.get(url)
 
         self.login()
+
+        name=self.root.find_element_by_xpath("/html/body/section[3]/div/div/div[1]/div/a/h1").text.lower()
 
         id = re.findall(
             'https://hdpass.click/movie/(.*)\?noads=1', self.root.page_source)[0]
@@ -33,23 +36,24 @@ class M3U8:
                     '.*"converted url" "(.*)"', log["message"])
 
                 if len(blob) != 0:
-                    blob=blob[0]
+                    blob = blob[0]
                     print(blob)
                     self.root.get(blob)
                     time.sleep(1)
 
-                    blob= blob.split('/')[-1]
+                    blob = blob.split('/')[-1]
 
-                    with open("%s\\%s.m3u8" %(self.path,blob), 'r') as m3u8_url:
+                    with open("%s\\%s.m3u8" % (self.path, blob), 'r') as m3u8_url:
                         for line in m3u8_url.readlines():
                             m3u8 = re.findall("^(blob.*)\n", line)
                             if len(m3u8) != 0:
                                 m3u8 = m3u8[0]
                                 break
                     self.root.get(m3u8)
-                    os.remove("%s\\%s.m3u8" %(self.path,blob))
+                    os.remove("%s\\%s.m3u8" % (self.path, blob))
                     time.sleep(0.5)
-                    return m3u8.split('/')[-1]
+                    initialize(name,m3u8.split('/')[-1])
+                    return name
 
     def login(self):
         email = self.root.find_element_by_xpath(
@@ -69,11 +73,8 @@ class M3U8:
         capabilities["goog:loggingPrefs"] = {"browser": "ALL"}
 
         options = webdriver.ChromeOptions()
-        prefs = {'download.default_directory' : self.path}
-        options.add_experimental_option('prefs', prefs)  
-       
+        prefs = {'download.default_directory': self.path}
+        options.add_experimental_option('prefs', prefs)
+
         self.root = webdriver.Chrome(
             executable_path="%s\\chromedriver_win32\\chromedriver.exe" % self.path, desired_capabilities=capabilities, options=options)
-
-
-print(M3U8().get("https://altadefinizionecommunity.net/flora-ulisse-streaming"))

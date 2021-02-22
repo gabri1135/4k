@@ -1,9 +1,11 @@
+from data import Data
 from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
 
 from downloader import *
+from get_m3u8 import M3U8
 
 
 # messagebox.askyesno("Account checker","Errore!\n"+str(err)+" combos non sono state scritte correttamente!\nVolete modificarle?")):
@@ -40,67 +42,77 @@ from downloader import *
 #    window.destroy()
 class Graphic:
 
-    def __init__(self):
-        self.m3u8_bool=False
-        self.output_bool=False
+    def __init__(self, data: Data):
+        self.data = data
+        self.m3u8File=False
 
         self.window = Tk()
 
-        self.window.geometry("258x106")
+        self.window.geometry("258x135")
         self.window.title("4K downloader")
 
         label = Label(
             self.window, text="Benvenuto nel 4k downloader per scaricare film")
         label.grid(row=0, column=0, columnspan=3, sticky="WE")
 
-        load_button = Button(text="File m3u8", command=self.load)
-        load_button.grid(row=1, column=0, sticky="WE", padx=5, pady=2.5)
-        
-        save_button = Button(text="Output file", command=self.save)
-        save_button.grid(row=1, column=1, sticky="WE", padx=5, pady=2.5)
+        self.url_label = Entry(
+            self.window, text="Url altadefinizione")
+        self.url_label.grid(row=1, column=0, columnspan=2, sticky="WE", padx=5, pady=2.5)
 
-        resume_button = Button(text="Riprendi download", command=self.resume)
-        resume_button.grid(row=2, column=0,columnspan=2, sticky="WE", padx=5, pady=2.5)
+        self.load_button = Button(
+            self.window, text="File m3u8", command=self.load)
+        self.load_button.grid(row=2, column=0, sticky="WE", padx=5, pady=2.5)
 
-        self.start_button = Button(text="Start", command=self.start,state='disabled')
-        self.start_button.grid(row=1, column=2,rowspan=2, sticky="NSWE", padx=5, pady=2.5)
+        self.name_label = Entry(
+            self.window, text="Output file")
+        self.name_label.grid(row=2, column=1, sticky="WE", padx=5, pady=2.5)
+
+        self.resume_button = Button(
+            self.window, text="Riprendi download", command=self.resume)
+        self.resume_button.grid(
+            row=3, column=0, columnspan=2, sticky="WE", padx=5, pady=2.5)
+
+        self.start_button = Button(
+            self.window, text="Start", command=self.start)
+        self.start_button.grid(row=1, column=2, rowspan=3,
+                               sticky="NSWE", padx=5, pady=2.5)
 
         by = Label(self.window, text="by Gabriele Martini")
-        by.grid(row=3, column=0, columnspan=3, sticky="WE")
+        by.grid(row=4, column=0, columnspan=3, sticky="WE")
 
         self.window.mainloop()
 
     def load(self):
         self.m3u8_file = filedialog.askopenfilename(
             parent=self.window, filetypes=[('File m3u8', '*.m3u8')])
-        self.m3u8_bool=True
-        self.start_button.config(state='active')
-
-    def save(self):
-        self.output_file = filedialog.asksaveasfilename(
-            parent=self.window, filetypes=[('File MP4', '*.mp4')])
-        try:
-            if(self.output_file[-4:] != ".mp4"):
-                self.output_file += ".mp4"
-        except:
-            self.output_file += ".mp4"
-        self.output_bool=True
-        self.start_button.config(state='active')
-    
-    def resume(self):
-        temp=filedialog.askdirectory(parent=self.window)
-        data=open("%s/data.txt"%temp).read().split()
-        self.m3u8_file=data[0]
-        self.output_file=data[1]
-        self.m3u8_bool=True
-        self.output_bool=True
-        self.start_button.config(state='active')
+        self.resume_button.config(state='disabled')
+        self.m3u8_file=True
+        name = self.name_label.get()
+        if name != '':
+            initialize(name)
+            #self.data.create(name)
+            Downloader(self, self.data, name)
 
     def start(self):
-        Downloader(self, self.m3u8_file, self.output_file)
-    
-    def error(self, title, message):
-        messagebox.showerror(title,message)
+        name=self.name_label.get()
+        url=self.url_label.get()
+        if url!='':
+            name=M3U8().get(url)
+            #self.data.create(name)
+            Downloader(self, self.data, name)
+        elif self.m3u8File and name!='':
+            initialize(name, self.m3u8_file)
+            self.data.create(name)
+            Downloader(self, self.data, name)
 
-if __name__ == "__main__":
-    Graphic()
+    def resume(self):
+        temp = filedialog.askdirectory(parent=self.window)
+        temp = temp.split('\\')[-1]
+        #progress = self.data.progressing[temp]["progress"]
+        #path = self.data.progressing[temp]["path"]
+        temp=temp.split('/')[-1]
+        path=realPath(temp)
+        Downloader(self, self.data, path)
+
+    def error(self, title, message):
+        messagebox.showerror(title, message)

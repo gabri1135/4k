@@ -12,4 +12,4 @@ class Decrypt:
         return bytes.fromhex(iv[0:32])
 
     def get(self, file):
-        self.decrypt.decrypt(file)
+        return self.decrypt.decrypt(file)
