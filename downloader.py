@@ -59,7 +59,7 @@ class Downloader:
 
         else:
             os.system("ffmpeg -f concat -i temp.txt -c copy output.mp4")
-            os.chdir(tempPath.split('\\')[:-1])
+            os.chdir(dir(tempPath))
             shutil.move("%s\\output.mp4" % tempPath, path)
             if os.path.exists(path):
                 shutil.rmtree(tempPath)
