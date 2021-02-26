@@ -19,14 +19,15 @@ class M3U8:
 
         name=self.root.find_element_by_xpath("/html/body/section[3]/div/div/div[1]/div/a/h1").text.lower()
 
-        id = re.findall(
-            'https://hdpass.click/movie/(.*)\?noads=1', self.root.page_source)[0]
-        self.root.get(
-            "https://hdpass.click/movie/%s?resolution=2&noads=1" % id)
-
-        id_4k = re.findall(
-            'https://hdmario.live/embed/(.*)\?&amp;noads=1', self.root.page_source)[0]
-        self.root.get("https://hdmario.live/embed/%s?&noads=1" % id_4k)
+        iframe=self.root.find_element_by_xpath("/html/body/section[5]/div/div/div/div/div[1]/div[2]/iframe")
+        self.root.get(iframe.get_attribute("src"))
+        
+        button_4k=self.root.find_element_by_xpath("/html/body/div[1]/div[1]/ul/li[3]/a")
+        
+        self.root.get(button_4k.get_attribute("href"))
+        
+        iframe_4k = self.root.find_element_by_xpath("/html/body/div[2]/iframe")
+        self.root.get(iframe_4k.get_attribute("src"))
 
         time.sleep(0.5)
 
@@ -43,15 +44,16 @@ class M3U8:
 
                     blob = blob.split('/')[-1]
 
-                    with open("%s\\%s.m3u8" % (self.path, blob), 'r') as m3u8_url:
+                    with open("%s.m3u8" %blob, 'r') as m3u8_url:
                         for line in m3u8_url.readlines():
                             m3u8 = re.findall("^(blob.*)\n", line)
                             if len(m3u8) != 0:
                                 m3u8 = m3u8[0]
                                 break
                     self.root.get(m3u8)
-                    os.remove("%s\\%s.m3u8" % (self.path, blob))
+                    os.remove("%s.m3u8" %blob)
                     time.sleep(0.5)
+                    self.root.quit()
                     initialize(name,m3u8.split('/')[-1])
                     return name
 
