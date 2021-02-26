@@ -1,6 +1,5 @@
 import shutil
 import os
-from enum import Enum
 
 
 def tempFolder(path, all=True):
@@ -15,10 +14,12 @@ def tempFolder(path, all=True):
 
 
 def initialize(name, m3u8Path):
-    temp = tempFolder(name)
-    os.mkdir(temp)
+    try:
+        temp = tempFolder(name)
+        os.mkdir(temp)
+    except: None
     shutil.move("%s.m3u8" % m3u8Path, "%s\\.m3u8" % temp)
 
 def realPath(tempPath):
-    tempPath=tempPath[1:]+".mp4"
+    tempPath=tempPath[1:]
     return tempPath.replace('_', ' ')

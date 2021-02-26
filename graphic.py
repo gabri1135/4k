@@ -44,7 +44,7 @@ class Graphic:
 
     def __init__(self, data: Data):
         self.data = data
-        self.m3u8File=False
+        self.m3u8Bool=False
 
         self.window = Tk()
 
@@ -86,7 +86,7 @@ class Graphic:
         self.m3u8_file = filedialog.askopenfilename(
             parent=self.window, filetypes=[('File m3u8', '*.m3u8')])
         self.resume_button.config(state='disabled')
-        self.m3u8_file=True
+        self.m3u8Bool=True
         name = self.name_label.get()
         if name != '':
             initialize(name)
@@ -100,7 +100,7 @@ class Graphic:
             name=M3U8().get(url)
             #self.data.create(name)
             Downloader(self, self.data, name)
-        elif self.m3u8File and name!='':
+        elif self.m3u8Bool and name!='':
             initialize(name, self.m3u8_file)
             self.data.create(name)
             Downloader(self, self.data, name)
