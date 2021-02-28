@@ -22,7 +22,11 @@ def initialize(name, m3u8Path):
 
 def realPath(tempPath):
     tempPath=tempPath[1:]
+<<<<<<< HEAD
     return tempPath.replace('_', ' ').replace('-',':')
+=======
+    return tempPath.replace('_', ' ')
+>>>>>>> 8efe8fa0718e350d96d00c60617ac5aaa78b1b19
 
 def dir(path):
     temp=path.split('\\')[-1]
