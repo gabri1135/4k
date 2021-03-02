@@ -89,9 +89,10 @@ class Graphic:
         self.m3u8Bool=True
         name = self.name_label.get()
         if name != '':
-            initialize(name)
+            initialize(name,self.m3u8_file)
             #self.data.create(name)
-            Downloader(self, self.data, name)
+            self.window.destroy()
+            Downloader( self.data, name)
 
     def start(self):
         name=self.name_label.get()
@@ -99,11 +100,13 @@ class Graphic:
         if url!='':
             name=M3U8().get(url)
             #self.data.create(name)
-            Downloader(self, self.data, name)
+            self.window.destroy()
+            Downloader(self.data, name)
         elif self.m3u8Bool and name!='':
             initialize(name, self.m3u8_file)
             self.data.create(name)
-            Downloader(self, self.data, name)
+            self.window.destroy()
+            Downloader(self.data, name)
 
     def resume(self):
         temp = filedialog.askdirectory(parent=self.window)
@@ -112,7 +115,5 @@ class Graphic:
         #path = self.data.progressing[temp]["path"]
         temp=temp.split('/')[-1]
         path=realPath(temp)
-        Downloader(self, self.data, path)
-
-    def error(self, title, message):
-        messagebox.showerror(title, message)
+        self.window.destroy()
+        Downloader(self.data, path)

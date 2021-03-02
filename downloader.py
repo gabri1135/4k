@@ -17,7 +17,7 @@ class Downloader:
             temp += chunk
         return temp
 
-    def __init__(self, graphic_self, dat: Data, path, progress=0):
+    def __init__(self, dat: Data, path, progress=0):
         if path[-4:] != ".mp4":
             path += '.mp4'
 
@@ -47,15 +47,14 @@ class Downloader:
             for i in range(progress, l):
                 file_name = 'tmp_%d.mp4' % i
                 print('Processing %d of %d' % (i+1, l))
-                
+
                 open(file_name, 'wb').write(
                     dec.get(self.getFile(film_urls[i])))
 
                 open('temp.txt', 'a').write("file '%s'\n" % file_name)
 
         except:
-            graphic_self.error(
-                "Errore download", "Errore nel download dei file\nRiprova in seguito")
+            print("Errore nel download dei file\nRiprova in seguito")
 
         else:
             os.system("ffmpeg -f concat -i temp.txt -c copy output.mp4")
@@ -64,5 +63,4 @@ class Downloader:
             if os.path.exists(path):
                 shutil.rmtree(tempPath)
             else:
-                graphic_self.error(
-                    "Errore concatenamento", "Errore nella concatenazione dei file\n Riprova in seguito")
+                print("Errore nella concatenazione dei file\n Riprova in seguito")
