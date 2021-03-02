@@ -18,7 +18,10 @@ def initialize(name, m3u8Path):
         temp = tempFolder(name)
         os.mkdir(temp)
     except: None
-    shutil.move("%s.m3u8" % m3u8Path, "%s\\.m3u8" % temp)
+
+    if m3u8Path[-5:] != ".m3u8":
+        m3u8Path += ".m3u8";
+    shutil.move(m3u8Path, "%s\\.m3u8" % temp)
 
 def realPath(tempPath):
     tempPath=tempPath[1:]
