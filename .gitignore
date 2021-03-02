@@ -1,0 +1,5 @@
+__pycache__/
+*.m3u8
+*.json
+*.mp4
+*/temp.txt
