@@ -20,7 +20,7 @@ def initialize(name, m3u8Path):
     except: None
 
     if m3u8Path[-5:] != ".m3u8":
-        m3u8Path += ".m3u8";
+        m3u8Path += ".m3u8"
     shutil.move(m3u8Path, "%s\\.m3u8" % temp)
 
 def realPath(tempPath):
