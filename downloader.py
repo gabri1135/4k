@@ -9,7 +9,7 @@ from decrypt import Decrypt
 
 class Downloader:
 
-    def getFile(self, url):
+    def getFile(self, url: str) -> bytes:
         r = requests.get(url, stream=True)
         temp = b''
 
@@ -17,7 +17,7 @@ class Downloader:
             temp += chunk
         return temp
 
-    def __init__(self, dat: Data, path, progress=0):
+    def __init__(self, dat: Data, path: str) -> None:
         if path[-4:] != ".mp4":
             path += '.mp4'
 
@@ -25,9 +25,10 @@ class Downloader:
         os.chdir(tempPath)
 
         try:
-            progress = int(re.findall("file '.*_(.*).mp4",
+            progress = int(re.findall("file 'tmp_(.*).mp4",
                                       open('temp.txt', 'r').readlines()[-1])[0])+1
         except:
+            progress = 0
             open("temp.txt", "w").write('')
 
         data = open(".m3u8", 'r').read()
@@ -58,8 +59,9 @@ class Downloader:
 
         else:
             os.system("ffmpeg -f concat -i temp.txt -c copy output.mp4")
-            os.chdir(dir(tempPath))
+            os.chdir(precFolder(tempPath))
             shutil.move("%s\\output.mp4" % tempPath, path)
+
             if os.path.exists(path):
                 shutil.rmtree(tempPath)
             else:
