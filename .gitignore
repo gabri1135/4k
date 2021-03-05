@@ -2,5 +2,10 @@ __pycache__/
 *.m3u8
 *.json
 *.mp4
-*/temp.txt
+temp.txt
+accesskey.py
+
 .vscode/
+
+#other
+durata.py
