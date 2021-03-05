@@ -1,50 +1,17 @@
-from data import Data
-from tkinter import *
 from tkinter import filedialog
-from tkinter import messagebox
-from tkinter import ttk
+from tkinter import *
+import re
 
-from downloader import *
 from get_m3u8 import M3U8
+from downloader import *
+from data import Data
 
 
-# messagebox.askyesno("Account checker","Errore!\n"+str(err)+" combos non sono state scritte correttamente!\nVolete modificarle?")):
-#messagebox.showinfo("Account cheker","Inizio controllo combos")
-#messagebox.showerror("Account checker","Inserire combos")
-
-
-# def control():
-#    stop=0
-#    clear()
-#    text_input['height']='5'
-#    progress = ttk.Progressbar(window, mode = 'determinate',orient="horizontal",length=350)
-#    progress.grid(row=6,column=0,columnspan=3,sticky="NW",padx=5,pady=5)
-#    clear_button.destroy();start_button.destroy()
-#    out=tk.Label(window,textvariable=text)
-#    out.grid(row=3,column=1,rowspan=2,pady=5)
-#    load_button['text']='Stop';window.update()
-#    for i in range(len(mail)):
-#        window.update()
-#        if stop==1: break
-#        time.sleep(1)
-#        ok.append(mail[i]+":"+pas[i])
-#        text_input.insert(tk.END,mail[i]+":"+pas[i]+"\n")
-#        text.set("Checked: "+str(i+1)+" su "+str(len(mail))+"\nFree: "+" su "+str(i+1)+"\nLoad: "+str(int((i+1)/len(mail)*100))+"%")
-#        progress['value']=int((i+1)/len(mail)*100);window.update()
-#    if len(ok)!=0:
-#        if messagebox.askyesno("Account checker","Sono stati recuperati "+str(len(ok))+" account\nVolete salvarli?"):
-#            account=open(filedialog.asksaveasfilename(filetypes=[('File di testo','*.txt')],defaultextension='.txt'),"w")
-#            for line in ok:
-#                account.write(line+"\n")
-#            account.close()
-#    else:
-#        messagebox.showinfo("Account checker","Non sono stati recuperati account")
-#    window.destroy()
 class Graphic:
 
-    def __init__(self, data: Data):
+    def __init__(self, data: Data) -> None:
         self.data = data
-        self.m3u8Bool=False
+        self.m3u8Bool = False
 
         self.window = Tk()
 
@@ -57,7 +24,8 @@ class Graphic:
 
         self.url_label = Entry(
             self.window, text="Url altadefinizione")
-        self.url_label.grid(row=1, column=0, columnspan=2, sticky="WE", padx=5, pady=2.5)
+        self.url_label.grid(row=1, column=0, columnspan=2,
+                            sticky="WE", padx=5, pady=2.5)
 
         self.load_button = Button(
             self.window, text="File m3u8", command=self.load)
@@ -82,38 +50,78 @@ class Graphic:
 
         self.window.mainloop()
 
-    def load(self):
+    def start(self) -> None:
+        if not self._networkM3U8():
+            self._localM3U8()
+
+    def load(self) -> None:
         self.m3u8_file = filedialog.askopenfilename(
             parent=self.window, filetypes=[('File m3u8', '*.m3u8')])
         self.resume_button.config(state='disabled')
-        self.m3u8Bool=True
-        name = self.name_label.get()
-        if name != '':
-            initialize(name,self.m3u8_file)
-            #self.data.create(name)
-            self.window.destroy()
-            Downloader( self.data, name)
+        self.m3u8Bool = True
+        self._localM3U8()
 
-    def start(self):
-        name=self.name_label.get()
-        url=self.url_label.get()
-        if url!='':
-            name=M3U8().get(url)
-            #self.data.create(name)
-            self.window.destroy()
-            Downloader(self.data, name)
-        elif self.m3u8Bool and name!='':
-            initialize(name, self.m3u8_file)
-            self.data.create(name)
-            self.window.destroy()
-            Downloader(self.data, name)
-
-    def resume(self):
+    def resume(self) -> None:
         temp = filedialog.askdirectory(parent=self.window)
-        temp = temp.split('\\')[-1]
         #progress = self.data.progressing[temp]["progress"]
         #path = self.data.progressing[temp]["path"]
-        temp=temp.split('/')[-1]
-        path=realPath(temp)
+
+        path = fileName(temp)
         self.window.destroy()
         Downloader(self.data, path)
+
+    def _localM3U8(self) -> None:
+        name = self.name_label.get()
+        if name != '' and self.m3u8bool:
+            initializeFilm(name, self.m3u8_file)
+            # self.data.create(name)
+            self.window.destroy()
+            Downloader(self.data, name)
+            return True
+        return False
+
+    def _networkM3U8(self) -> bool:
+        url = self.url_label.get()
+        if url == '':
+            return False
+        if re.match(r'.*altadefinizionecommunity\.net\/.*', url) != None:
+            self.window.destroy()
+            name = M3U8().getFilm(url)
+            # self.data.create(name)
+            Downloader(self.data, name)
+
+        elif re.match(r".*seriehd\..*", url) != None:
+            self.window.destroy()
+            seasons = self._n('1,2')
+            episodes = self._n('1,2')
+            name = M3U8().getSerie(url, seasons, episodes)
+
+            os.chdir("%s\\%s" % (os.getcwd(), name))
+            for season in seasons:
+                for episode in episodes:
+                    Downloader(self.data, "%s\\%d_%d" %
+                               (os.getcwd(), season, episode))
+        return True
+
+    def _n(self, input: str) -> set(int):
+        if input == '':
+            return {}
+
+        prec = False
+        list = input.split(',')
+
+        for i in range(len(list)):
+            if list[i] == '...':
+                prec = True
+            elif prec:
+                list[i] = int(list[i])-1
+                [list.append(item) for item in range(list[i-2], list[i])]
+                prec = False
+            else:
+                list[i] = int(list[i])-1
+        ep = set(list)
+        try:
+            ep.remove('...')
+        except:
+            None
+        return ep
