@@ -17,17 +17,17 @@ class Downloader:
             temp += chunk
         return temp
 
-    def __init__(self, dat: Data, path: str) -> None:
+    def __init__(self, dat: Data, path: str, resume: bool) -> None:
         if path[-4:] != ".mp4":
             path += '.mp4'
 
-        tempPath = tempFolder(path)
+        tempPath = os.getcwd()+'\\'+tempFolder(path)
         os.chdir(tempPath)
 
-        try:
-            progress = int(re.findall("file 'tmp_(.*).mp4",
-                                      open('temp.txt', 'r').readlines()[-1])[0])+1
-        except:
+        if resume:
+            progress = int(re.findall("file tmp_(.*).mp4",
+                                      open('temp.txt', 'r').readlines()[-3])[0])+1
+        else:
             progress = 0
             open("temp.txt", "w").write('')
 
@@ -40,7 +40,7 @@ class Downloader:
         dec = Decrypt(key)
 
         film_urls = re.findall(
-            '#EXTINF:.*,\s(.*)', data)
+            r'#EXTINF:(.*),\s(.*)', data)
 
         l = len(film_urls)
 
@@ -50,19 +50,58 @@ class Downloader:
                 print('Processing %d of %d' % (i+1, l))
 
                 open(file_name, 'wb').write(
-                    dec.get(self.getFile(film_urls[i])))
+                    dec.get(self.getFile(film_urls[i][1])))
 
-                open('temp.txt', 'a').write("file '%s'\n" % file_name)
+                open('temp.txt', 'a').write(
+                    "file %s\nduration %s\n\n" % (file_name, film_urls[i][0]))
 
         except:
             print("Errore nel download dei file\nRiprova in seguito")
 
         else:
-            os.system("ffmpeg -f concat -i temp.txt -c copy output.mp4")
+            #            size = 0
+            #            st = os.stat_result.
+            #            free = st.f_bavail * st.f_frsize
+            #            for file_name in os.listdir(tempPath):
+            #                size += os.path.getsize(file_name)
+            #
+            #            if free >= size:
+            self._concatenateAll()
+#            else:
+#                self._concatenateProgress(l)
+
             os.chdir(precFolder(tempPath))
-            shutil.move("%s\\output.mp4" % tempPath, path)
 
             if os.path.exists(path):
+                overwrite = input(
+                    "File already exist, overwrite [y/N]: ").lower()
+                if overwrite == 'n':
+                    return
+
+            try:
+                shutil.move("%s\\output.mp4" % tempPath, path)
                 shutil.rmtree(tempPath)
-            else:
-                print("Errore nella concatenazione dei file\n Riprova in seguito")
+            except:
+                print("Errore nella concatenazione")
+
+    def _concatenateAll(self) -> None:
+        os.system("ffmpeg -f concat -i temp.txt -c copy output.mp4")
+
+    def _concatenateProgress(self, l: int) -> None:
+        all = []
+
+        for file in os.listdir():
+            name = re.findall("tmp_(.*).mp4", file)
+            if len(name) != 0:
+                all.append(int(name[0]))
+                if name[0] == '0':
+                    self._rename(name[0])
+
+        all.sort()
+
+        for file in all:
+            os.system("ffmpeg -f concat -i temp.txt -c -y copy output.mp4")
+            os.remove("tmp_%.mp4")
+
+    def _rename(self, num: str) -> None:
+        os.rename("tmp_%s.mp4" % num, "output.mp4")
