@@ -87,7 +87,7 @@ class M3U8:
 
             for episode in episodes:
                 _m3u8 = self._getEpisode(episodeUrl, season, episode)
-                initializeSerie(name, _m3u8, season, episode)
+                initializeSerie(name, _m3u8, season+1, episode+1)
         self.root.quit()
         return name
 
