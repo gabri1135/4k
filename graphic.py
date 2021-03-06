@@ -65,10 +65,14 @@ class Graphic:
         temp = filedialog.askdirectory(parent=self.window)
         #progress = self.data.progressing[temp]["progress"]
         #path = self.data.progressing[temp]["path"]
+        if re.split(r"\\|\/", temp)[-1][0] != '.':
+            path = fileName(temp)
+        else:
+            os.chdir(precFolder(temp))
+            path = re.split(r"\\|\/", temp)[-1][1:]
 
-        path = fileName(temp)
         self.window.destroy()
-        Downloader(self.data, path)
+        Downloader(self.data, path, True)
 
     def _localM3U8(self) -> None:
         name = self.name_label.get()
@@ -76,7 +80,7 @@ class Graphic:
             initializeFilm(name, self.m3u8_file)
             # self.data.create(name)
             self.window.destroy()
-            Downloader(self.data, name)
+            Downloader(self.data, name, False)
             return True
         return False
 
@@ -88,19 +92,19 @@ class Graphic:
             self.window.destroy()
             name = M3U8().getFilm(url)
             # self.data.create(name)
-            Downloader(self.data, name)
+            Downloader(self.data, name, False)
 
         elif re.match(r".*seriehd\..*", url) != None:
             self.window.destroy()
-            seasons = self._n('1,2')
-            episodes = self._n('1,2')
+            seasons = self._n('1')
+            episodes = self._n('9')
             name = M3U8().getSerie(url, seasons, episodes)
 
             os.chdir("%s\\%s" % (os.getcwd(), name))
             for season in seasons:
                 for episode in episodes:
-                    Downloader(self.data, "%s\\%d_%d" %
-                               (os.getcwd(), season, episode))
+                    Downloader(self.data, "%d_%d" %
+                               (season+1, episode+1), False)
         return True
 
     def _n(self, input: str) -> set(int):
