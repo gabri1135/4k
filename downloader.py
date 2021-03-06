@@ -42,7 +42,7 @@ class Downloader:
         film_urls = re.findall(
             r'#EXTINF:(.*),\s(.*)', data)
 
-        l = len(film_urls)
+        l = 5
 
         try:
             for i in range(progress, l):
@@ -73,16 +73,14 @@ class Downloader:
             os.chdir(precFolder(tempPath))
 
             if os.path.exists(path):
-                overwrite = input(
-                    "File already exist, overwrite [y/N]: ").lower()
-                if overwrite == 'n':
-                    return
+                x = 1
+                while True:
+                    if not os.path.exists("%s(%d).mp4" % (path[:-4], x)):
+                        path = "%s(%d).mp4" % (path[:-4], x)
+                        break
 
-            try:
-                shutil.move("%s\\output.mp4" % tempPath, path)
-                shutil.rmtree(tempPath)
-            except:
-                print("Errore nella concatenazione")
+            shutil.move("%s\\output.mp4" % tempPath, path)
+            shutil.rmtree(tempPath)
 
     def _concatenateAll(self) -> None:
         os.system("ffmpeg -f concat -i temp.txt -c copy output.mp4")
