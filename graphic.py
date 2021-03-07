@@ -1,16 +1,16 @@
+from serie import Serie
 from tkinter import filedialog
 from tkinter import *
+from os import path as Path, getcwd, listdir
 import re
 
 from get_m3u8 import M3U8
 from downloader import *
-from data import Data
 
 
 class Graphic:
 
-    def __init__(self, data: Data) -> None:
-        self.data = data
+    def __init__(self) -> None:
         self.m3u8Bool = False
 
         self.window = Tk()
@@ -58,29 +58,36 @@ class Graphic:
         self.m3u8_file = filedialog.askopenfilename(
             parent=self.window, filetypes=[('File m3u8', '*.m3u8')])
         self.resume_button.config(state='disabled')
+        self.url_label.config(state='disabled')
         self.m3u8Bool = True
         self._localM3U8()
 
     def resume(self) -> None:
         temp = filedialog.askdirectory(parent=self.window)
-        #progress = self.data.progressing[temp]["progress"]
-        #path = self.data.progressing[temp]["path"]
-        if re.split(r"\\|\/", temp)[-1][0] != '.':
-            path = fileName(temp)
+
+        if Path.basename(temp)[0] == '.':
+            if Path.dirname(Path.abspath(temp)) == getcwd():
+                _path = fileName(temp)
+            else:
+                os.chdir(Path.dirname(temp))
+                _path = Path.basename(temp)[1:]
         else:
-            os.chdir(precFolder(temp))
-            path = re.split(r"\\|\/", temp)[-1][1:]
+            os.chdir(temp)
+            _path = []
+            for file in listdir():
+                if Path.basename(file)[0] == '.':
+                    _path.append(Path.basename(file)[1:])
 
         self.window.destroy()
-        Downloader(self.data, path, True)
+        for path in list(_path):
+            Downloader(path)
 
     def _localM3U8(self) -> None:
         name = self.name_label.get()
         if name != '' and self.m3u8bool:
             initializeFilm(name, self.m3u8_file)
-            # self.data.create(name)
             self.window.destroy()
-            Downloader(self.data, name, False)
+            Downloader(name)
             return True
         return False
 
@@ -92,19 +99,25 @@ class Graphic:
             self.window.destroy()
             name = M3U8().getFilm(url)
             # self.data.create(name)
-            Downloader(self.data, name, False)
+            Downloader(name)
 
         elif re.match(r".*seriehd\..*", url) != None:
             self.window.destroy()
-            seasons = self._n('1')
-            episodes = self._n('9')
-            name = M3U8().getSerie(url, seasons, episodes)
+            serie = Serie(url)
+            #seasons = self._n(input("Seasons: "))
+            # if len(seasons) == 1:
+            #    episodes = self._n(input("Episodes: "))
+            # else:
+            #    episodes = {}
+            dict = {5: [0]}
+            last = [5]
+            all = serie.check(dict, last)
+            M3U8().getSerie(serie.name, serie.url, all)
 
-            os.chdir("%s\\%s" % (os.getcwd(), name))
-            for season in seasons:
-                for episode in episodes:
-                    Downloader(self.data, "%d_%d" %
-                               (season+1, episode+1), False)
+            os.chdir("%s\\%s" % (os.getcwd(), serie.name))
+            for episode in all:
+                Downloader("%d_%d" % (episode[0]+1, episode[1]+1))
+
         return True
 
     def _n(self, input: str) -> set(int):
