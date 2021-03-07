@@ -4,6 +4,7 @@ __pycache__/
 *.mp4
 temp.txt
 accesskey.py
+.todo
 
 .vscode/
 
