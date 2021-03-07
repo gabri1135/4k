@@ -40,7 +40,7 @@ class M3U8:
                     time.sleep(0.5)
                     return m3u8.split('/')[-1]+'.m3u8'
 
-    def getFilm(self,  url: str) -> None:
+    def getFilm(self,  url: str) -> str:
         self.root.get(url)
         self._login()
 
@@ -65,35 +65,16 @@ class M3U8:
         m3u8 = self._blob()
         self.root.quit()
         initializeFilm(name, m3u8)
-
-    def getSerie(self, url: str, seasons: set, episodes: set) -> None:
-        self.root.get(url)
-
-        # get name
-        name = self.root.find_element_by_xpath(
-            "/html/body/div/section[1]/div/div/div[2]/div/div/div[2]/a/h1").text.lower()
-        if name[-9:] == ' la serie':
-            name = name[:-9]
-
-        # go to tvShow page
-        allEpisode = self.root.find_element_by_xpath(
-            '/html/body/div/section[1]/div/div/div[2]/div/div/div[2]/iframe')
-        episodeUrl = allEpisode.get_attribute("src")
-
-        for season in seasons:
-            if len(episodes) == 0:
-                episodes = self._numEpisode(
-                    '%s/?season=%d' % (episodeUrl, season))
-
-            for episode in episodes:
-                _m3u8 = self._getEpisode(episodeUrl, season, episode)
-                initializeSerie(name, _m3u8, season+1, episode+1)
-        self.root.quit()
         return name
 
-    def _getEpisode(self, url: str, season: int, episode: int) -> str:
-        self.root.get('%s?season=%d&episode=%d' %
-                      (url, season, episode))
+    def getSerie(self, name: str, url: str, all: list[tuple]) -> None:
+        for x in all:
+            _m3u8 = self._getEpisode(url, x)
+            initializeSerie(name, _m3u8, x)
+        self.root.quit()
+
+    def _getEpisode(self, url: str, detail: tuple) -> str:
+        self.root.get('{}?season=%d&episode=%d'.format(url) % detail)
 
         # go to 4k definition
         button_4k = self.root.find_element_by_xpath(
