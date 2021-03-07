@@ -1,70 +1,57 @@
+from os import path as Path, getcwd, mkdir, remove
 import shutil
-import os
 import re
 
-# from:  C:\Developer\Programmi\film\4k\film.mp4
+# from:  film
+# from:  film.mp4
 # to:    C:\Developer\Programmi\film\4k\.film
-# to:    .film
 
 
-def tempFolder(path: str, all: bool = True) -> str:
-    if path[-4:] == ".mp4":
-        path = path.removesuffix(
-            '.mp4')
+def tempFolder(_name: str) -> str:
+    if _name[-4:] == '.mp4':
+        _name = _name.removesuffix('.mp4')
 
-    temp = re.split(r'\\|\/', path)
+    _name = '.'+_name
+    _name.replace(' ', '_').replace(':', '-')
 
-    temp[-1] = '.'+temp[-1]
-    temp[-1].replace(' ', '_').replace(':', '-')
-
-    if all:
-        fullPath = ''
-        for x in temp:
-            fullPath += x+'\\'
-        return fullPath.removesuffix('\\')
-    else:
-        return temp[-1]
+    return getcwd()+'\\'+_name
 
 
 def initializeFilm(name: str, m3u8Path: str) -> bool:
-    temp = tempFolder(name)
-    if os.path.exists(temp):
+    _temp = tempFolder(name)
+    if Path.exists(_temp):
+        remove(m3u8Path)
         return False
 
-    os.mkdir(temp)
-    if m3u8Path[-5:] != ".m3u8":
-        m3u8Path += ".m3u8"
-    shutil.move(m3u8Path, "%s\\.m3u8" % temp)
+    mkdir(_temp)
+    shutil.move(m3u8Path, "%s\\.m3u8" % _temp)
+    open("%s\\temp.txt" % _temp, 'w').write("ffconcat version 1.0\n\n")
     return True
 
 
-def initializeSerie(name: str, m3u8Path: str, season: int, episode: int) -> bool:
-    temp = os.getcwd()+'\\%s' % name
-    if not os.path.exists(temp):
-        os.mkdir(temp)
+def initializeSerie(name: str, m3u8Path: str, detail: tuple) -> bool:
+    temp = getcwd()+'\\%s' % name
+    if not Path.exists(temp):
+        mkdir(temp)
 
-    elif os.path.exists('%s\\.%d_%d' % (temp, season, episode)):
+    temp += '\\.%d_%d' % (detail[0]+1, detail[1]+1)
+
+    if Path.exists(temp):
+        remove(m3u8Path)
         return False
 
-    os.mkdir('%s\\.%d_%d' % (temp, season, episode))
-    if m3u8Path[-5:] != ".m3u8":
-        m3u8Path += ".m3u8"
-    shutil.move(m3u8Path, '%s\\.%d_%d\\.m3u8' % (temp, season, episode))
+    mkdir(temp)
+    shutil.move(m3u8Path, '%s\\.m3u8' % temp)
+
+    open("%s\\temp.txt" % temp,
+         'w').write("ffconcat version 1.0\n\n")
     return True
 
 
 # from:  C:\Developer\Programmi\film\4k\.film
 # to:    film.mp4
-def fileName(path: str) -> str:
-    tempPath = re.split(r"\\|\/", path)[-1]
-    if tempPath[-4:] != ".mp4":
+def fileName(_path: str) -> str:
+    tempPath = Path.basename(_path)
+    if Path.isdir(_path):
         tempPath += '.mp4'
-    return tempPath.replace('_', ' ')
-
-
-# from:  C:\Developer\Programmi\film\4k\.film
-# from:  C:\Developer\Programmi\film\4k\film.mp4
-# to:    C:\Developer\Programmi\film\4k\
-def precFolder(path: str) -> str:
-    temp = re.split(r"\\|\/", path)[-1]
-    return path.removesuffix(temp)
+    return tempPath[1:].replace('_', ' ')
