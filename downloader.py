@@ -1,4 +1,3 @@
-from data import Data
 import os
 import re
 import requests
@@ -17,24 +16,23 @@ class Downloader:
             temp += chunk
         return temp
 
-    def __init__(self, dat: Data, path: str, resume: bool) -> None:
-        if path[-4:] != ".mp4":
-            path += '.mp4'
+    def __init__(self, _name: str) -> None:
+        if _name[-4:] != ".mp4":
+            _name += '.mp4'
 
-        tempPath = os.getcwd()+'\\'+tempFolder(path)
+        tempPath = tempFolder(_name)
         os.chdir(tempPath)
 
-        if resume:
+        try:
             progress = int(re.findall("file tmp_(.*).mp4",
                                       open('temp.txt', 'r').readlines()[-3])[0])+1
-        else:
+        except:
             progress = 0
-            open("temp.txt", "w").write('')
 
         data = open(".m3u8", 'r').read()
 
         key_url = re.findall(
-            '#EXT-X-KEY:METHOD=AES-128,URI="(.*)"', data)
+            r'#EXT-X-KEY:METHOD=AES-128,URI="(.*)"', data)
         key = self.getFile(key_url[0])
 
         dec = Decrypt(key)
@@ -42,7 +40,7 @@ class Downloader:
         film_urls = re.findall(
             r'#EXTINF:(.*),\s(.*)', data)
 
-        l = 5
+        l = len(film_urls)
 
         try:
             for i in range(progress, l):
@@ -70,16 +68,16 @@ class Downloader:
 #            else:
 #                self._concatenateProgress(l)
 
-            os.chdir(precFolder(tempPath))
+            os.chdir(Path.dirname(tempPath))
 
-            if os.path.exists(path):
+            if Path.exists(_name):
                 x = 1
                 while True:
-                    if not os.path.exists("%s(%d).mp4" % (path[:-4], x)):
-                        path = "%s(%d).mp4" % (path[:-4], x)
+                    if not os.path.exists("%s(%d).mp4" % (_name[:-4], x)):
+                        path = "%s(%d).mp4" % (_name[:-4], x)
                         break
 
-            shutil.move("%s\\output.mp4" % tempPath, path)
+            shutil.move("%s\\output.mp4" % tempPath, _name)
             shutil.rmtree(tempPath)
 
     def _concatenateAll(self) -> None:
