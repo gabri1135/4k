@@ -1,14 +1,17 @@
+from m3u8 import M3U8
 import os
 import re
 import requests
 import shutil
-from utils import *
 from decrypt import Decrypt
+from path import PathModel
+from id import Id
 
 
 class Downloader:
 
-    def getFile(self, url: str) -> bytes:
+    @staticmethod
+    def getFile(url: str) -> bytes:
         r = requests.get(url, stream=True)
         temp = b''
 
@@ -16,12 +19,10 @@ class Downloader:
             temp += chunk
         return temp
 
-    def __init__(self, _name: str) -> None:
-        if _name[-4:] != ".mp4":
-            _name += '.mp4'
-
-        tempPath = tempFolder(_name)
-        os.chdir(tempPath)
+    def __init__(self, _outputFile: PathModel, _tempFolder: PathModel = None) -> None:
+        if _tempFolder is None:
+            _tempFolder = _outputFile.temp()
+        os.chdir(_tempFolder.path)
 
         try:
             progress = int(re.findall("file tmp_(.*).mp4",
@@ -29,29 +30,26 @@ class Downloader:
         except:
             progress = 0
 
-        data = open(".m3u8", 'r').read()
-
-        key_url = re.findall(
-            r'#EXT-X-KEY:METHOD=AES-128,URI="(.*)"', data)
-        key = self.getFile(key_url[0])
+        key, M3U8s = M3U8.getAll(self)
 
         dec = Decrypt(key)
 
-        film_urls = re.findall(
-            r'#EXTINF:(.*),\s(.*)', data)
-
-        l = len(film_urls)
+        l = len(M3U8s)
+        id = Id(l, progress)
 
         try:
             for i in range(progress, l):
-                file_name = 'tmp_%d.mp4' % i
+                file_name = 'tmp_%s.mp4' % id.add()
                 print('Processing %d of %d' % (i+1, l))
 
+                url = M3U8s[i].url
+                url = "http" + url.removeprefix("https")
+
                 open(file_name, 'wb').write(
-                    dec.get(self.getFile(film_urls[i][1])))
+                    dec.get(self.getFile(url)))
 
                 open('temp.txt', 'a').write(
-                    "file %s\nduration %s\n\n" % (file_name, film_urls[i][0]))
+                    "file %s\nduration %s\n\n" % (file_name, M3U8s[i].duration))
 
         except:
             print("Errore nel download dei file\nRiprova in seguito")
@@ -68,17 +66,10 @@ class Downloader:
 #            else:
 #                self._concatenateProgress(l)
 
-            os.chdir(Path.dirname(tempPath))
+            os.chdir(_tempFolder.dir)
 
-            if Path.exists(_name):
-                x = 1
-                while True:
-                    if not os.path.exists("%s(%d).mp4" % (_name[:-4], x)):
-                        path = "%s(%d).mp4" % (_name[:-4], x)
-                        break
-
-            shutil.move("%s\\output.mp4" % tempPath, _name)
-            shutil.rmtree(tempPath)
+            shutil.move("%s\\output.mp4" % _tempFolder.name, _outputFile.path)
+            shutil.rmtree(_tempFolder.path)
 
     def _concatenateAll(self) -> None:
         os.system("ffmpeg -f concat -i temp.txt -c copy output.mp4")

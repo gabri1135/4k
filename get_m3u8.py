@@ -1,15 +1,15 @@
+from serie import Serie
+from path import PathModel
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium import webdriver
 from accessKey import User
-from utils import *
 import base64
 import time
 import re
 import os
 
 
-class M3U8:
-
+class DownloadM3U8:
     def __init__(self) -> None:
         self._setProp()
 
@@ -40,37 +40,30 @@ class M3U8:
                     time.sleep(0.5)
                     return m3u8.split('/')[-1]+'.m3u8'
 
-    def getFilm(self,  url: str) -> str:
+    def getFilm(self,  url: str) -> PathModel:
         self.root.get(url)
-        self._login()
-
-        # get name
-        name = self.root.find_element_by_xpath(
-            "/html/body/section[3]/div/div/div[1]/div/a/h1").text.lower()
-
-        # go to movie page
-        iframe = self.root.find_element_by_xpath(
-            "/html/body/section[5]/div/div/div/div/div[1]/div[2]/iframe")
-        self.root.get(iframe.get_attribute("src"))
 
         # go to 4k definition
-        button_4k = self.root.find_element_by_xpath(
+        button4k = self.root.find_element_by_xpath(
             "/html/body/div[1]/div[1]/ul/li[3]/a")
-        self.root.get(button_4k.get_attribute("href"))
+        self.root.get(button4k.get_attribute("href"))
 
-        # go to embed page
-        embed = self.root.find_element_by_xpath("/html/body/div[2]/iframe")
-        self.root.get(embed.get_attribute("src"))
+        embed = self.root.find_element_by_xpath(
+            '/html/body/div[2]/iframe')
+        embedUrl = str(embed.get_attribute("src"))
+
+        self.root.get(embedUrl.replace("embed", "login"))
+        if re.match(r".*\/login\/.*", self.root.current_url) != None:
+            self._login()
 
         m3u8 = self._blob()
         self.root.quit()
-        initializeFilm(name, m3u8)
-        return name
+        return PathModel(os.getcwd()).add(m3u8)
 
-    def getSerie(self, name: str, url: str, all: list[tuple]) -> None:
+    def getSerie(self, outputFolder: PathModel, url: str, all: list[tuple]) -> None:
         for x in all:
             _m3u8 = self._getEpisode(url, x)
-            initializeSerie(name, _m3u8, x)
+            Serie.initialize(x, outputFolder,  PathModel(os.getcwd()).add(_m3u8))
         self.root.quit()
 
     def _getEpisode(self, url: str, detail: tuple) -> str:
@@ -88,11 +81,10 @@ class M3U8:
 
         # go to login page
         _url = base64.b64decode(encodedUrl).decode()
-        _id = re.findall(r"https:\/\/hdmario.live\/embed\/(.*)", _url)[0]
-        self.root.get("https://hdmario.live/login/%s" % _id)
+        self.root.get(_url.replace("embed", "login"))
 
         if re.match(r".*\/login\/.*", self.root.current_url) != None:
-            self._login(False)
+            self._login()
 
         return self._blob()
 
@@ -103,18 +95,16 @@ class M3U8:
         lenght = len(_all.find_elements_by_tag_name('li'))
         return set([i for i in range(lenght)])
 
-    def _login(self, film) -> None:
+    def _login(self) -> None:
         email = self.root.find_element_by_xpath(
-            "/html/body/div/div/div/div[2]/div[2]/form/div[1]/input" if film else
             "/html/body/div[3]/div/div/div[2]/div/div[2]/form/div[1]/input")
         email.send_keys(User.email())
 
         pas = self.root.find_element_by_xpath(
-            "/html/body/div/div/div/div[2]/div[2]/form/div[2]/input" if film else "/html/body/div[3]/div/div/div[2]/div/div[2]/form/div[2]/input")
+            "/html/body/div[3]/div/div/div[2]/div/div[2]/form/div[2]/input")
         pas.send_keys(User.password())
 
         butt = self.root.find_element_by_xpath(
-            "/html/body/div/div/div/div[2]/div[2]/form/div[3]/button" if film else
             "/html/body/div[3]/div/div/div[2]/div/div[2]/form/div[3]/button")
         butt.submit()
 

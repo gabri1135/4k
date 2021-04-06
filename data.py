@@ -1,35 +1,50 @@
 import json
 import os
-from re import A
-from utils import tempFolder
+from typing import Literal
+from path import PathModel
 
 
 class Data:
-    def __init__(self):
-        if not os.path.exists('data.json'):
-            open('data.json', 'w').write(json.dumps({"progressing": {},
-                                          "complete": {}}))
+    def __init__(self) -> None:
+        if os.path.exists('data.json'):
+            self.out = dict(json.loads(open('data.json', 'r').read()))
+        else:
+            self.out = {}
 
-        data = json.loads(open('data.json', 'r').read())
-        self.progressing = data["progressing"]
-        self.complete = data["complete"]
+    @staticmethod
+    def create(_outputFile: PathModel) -> Literal['created', 'exist', 'outPath different']:
+        self = Data()
+        if not _outputFile.name in self.out.keys():
+            self.out[_outputFile.name] = _outputFile.path
+            self.write()
+            return 'created'
 
-    def create(self, path):
-        tempName = tempFolder(path,all=False)
-        temp={tempName:{"path": path, "progress": 0}}
-        self.progressing.update(temp)
-        self.write
+        if self.out[_outputFile.name] == _outputFile.path:
+            return 'exist'
 
-    def update(self, tempName, progress):
-        self.progressing[tempName]["progress"] = progress
-        self.write
+        return 'outPath different'
 
-    def done(self, tempName, name):
-        self.complete.append(name)
-        del self.progressing[tempName]
-        self.write
+    @staticmethod
+    def update(_outputFolder: PathModel) -> None:
+        self = Data()
+        self.out.update({_outputFolder.name: _outputFolder.path})
+
+        self.write()
+
+    @staticmethod
+    def delete(name: str) -> None:
+        self = Data()
+        if name in self.out.keys():
+            self.out.pop(name)
+            self.write()
+
+    @staticmethod
+    def get(name: str) -> PathModel | None:
+        self = Data()
+        if name in self.out.keys():
+            return PathModel(self.out.get(name))
+        return None
 
     def write(self):
-        temp = json.dumps({"progressing": self.progressing,
-                          "complete": self.complete})
+        temp = json.dumps(self.out)
         open('data.json', 'w').write(temp)
